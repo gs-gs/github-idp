@@ -54,6 +54,19 @@ const getUserInfo = accessToken =>
     return mergedClaims;
   });
 
+const getMembershipConfirmation = (accessToken, org, user) =>
+  github()
+    .getMembership(accessToken, org, user)
+    .then((response) => {
+      if (response.status === 204 || response.status === 200) {
+        logger.info('membership check was successful');
+        return true;
+      }
+      logger.error('Membership check failed');
+      throw new Error(`Could not verify ${user} membership in ${org}`, response);
+    })
+    .catch(error => console.error('did not work', error.message))
+
 const getAuthorizeUrl = (client_id, scope, state, response_type) =>
   github().getAuthorizeUrl(client_id, scope, state, response_type);
 
@@ -67,7 +80,7 @@ const getTokens = (code, state, host) =>
       // https://tools.ietf.org/html/rfc6749#section-5.1
       // Also, we need to add openid as a scope,
       // since GitHub will have stripped it
-      const scope = `openid ${githubToken.scope.replace(',', ' ')}`;
+      const scope = `openid ${githubToken.scope.replace(/,/gi, ' ')}`;
 
       // ** JWT ID Token required fields **
       // iss - issuer https url
@@ -112,7 +125,7 @@ const getConfigFor = host => ({
   // end_session_endpoint: 'https://server.example.com/connect/end_session',
   jwks_uri: `https://${host}/.well-known/jwks.json`,
   // registration_endpoint: 'https://server.example.com/connect/register',
-  scopes_supported: ['openid', 'read:user', 'user:email'],
+  scopes_supported: ['openid', 'read:user', 'user:email', 'read:org'],
   response_types_supported: [
     'code',
     'code id_token',
@@ -145,5 +158,6 @@ module.exports = {
   getUserInfo,
   getJwks,
   getConfigFor,
-  getAuthorizeUrl
+  getAuthorizeUrl,
+  getMembershipConfirmation
 };

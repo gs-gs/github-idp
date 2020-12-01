@@ -14,6 +14,7 @@ const getApiEndpoints = (
 ) => ({
   userDetails: `${apiBaseUrl}/user`,
   userEmails: `${apiBaseUrl}/user/emails`,
+  userMembership: (org, user) => `${apiBaseUrl}/orgs/${org}/memberships/${user}`,
   oauthToken: `${loginBaseUrl}/login/oauth/access_token`,
   oauthAuthorize: `${loginBaseUrl}/login/oauth/authorize`
 });
@@ -59,6 +60,8 @@ module.exports = (apiBaseUrl, loginBaseUrl) => {
       gitHubGet(urls.userDetails, accessToken).then(check),
     getUserEmails: accessToken =>
       gitHubGet(urls.userEmails, accessToken).then(check),
+    getMembership: (accessToken, org, user) =>
+        gitHubGet(urls.userMembership(org, user), accessToken),
     getToken: (code, state) => {
       const data = {
         // OAuth required fields

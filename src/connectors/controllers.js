@@ -1,3 +1,4 @@
+const { GITHUB_ORG } = require('../config');
 const logger = require('./logger');
 const openid = require('../openid');
 
@@ -15,10 +16,27 @@ module.exports = respond => ({
   },
   userinfo: tokenPromise => {
     tokenPromise
-      .then(token => openid.getUserInfo(token))
-      .then(userInfo => {
-        logger.debug('Resolved user infos:', userInfo, {});
-        respond.success(userInfo);
+      .then(async token => ({
+          token,
+          userInfo: await openid.getUserInfo(token)
+        })
+      )
+      .then(({userInfo, token}) => {
+        logger.info('Resolved user infos:', userInfo, {});
+        if (GITHUB_ORG) {
+          openid
+            .getMembershipConfirmation(token, GITHUB_ORG, userInfo.preferred_username)
+            .then(() => {
+              logger.info('Successfully confirmed user membership in organisation');
+              respond.success(userInfo);
+            })
+            .catch(error => {
+              logger.error('Failed to confirm user membership: %s', error.message || error);
+              respond.error(error);
+            })
+        } else {
+          respond.success(userInfo);
+        }
       })
       .catch(error => {
         logger.error(
@@ -41,6 +59,7 @@ module.exports = respond => ({
             host,
             {}
           );
+          logger.debug('Received tokens:', tokens);
           respond.success(tokens);
         })
         .catch(error => {

@@ -4,6 +4,7 @@ module.exports = {
   COGNITO_REDIRECT_URI: process.env.COGNITO_REDIRECT_URI,
   GITHUB_API_URL: process.env.GITHUB_API_URL,
   GITHUB_LOGIN_URL: process.env.GITHUB_LOGIN_URL,
+  GITHUB_ORG: process.env.GITHUB_ORG,
   PORT: parseInt(process.env.PORT, 10) || undefined,
 
   // Splunk logging variables
