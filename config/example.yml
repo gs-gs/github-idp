@@ -1,0 +1,7 @@
+GITHUB_ORG: "gs-gs"
+GITHUB_CLIENT_ID: "<client id>"
+GITHUB_CLIENT_SECRET: "<client secret>"
+COGNITO_REDIRECT_URI: "cognito redirect URL"
+GITHUB_API_URL: "https://api.github.com"
+GITHUB_LOGIN_URL: "https://github.com"
+GITHUB_TEAMS: "team1,team2,team3"

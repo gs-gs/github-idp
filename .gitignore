@@ -1,12 +1,18 @@
+# package directories
 node_modules
 coverage
 pacts
 dist-web
 dist-lambda
 logs
+jspm_packages
 
 config.sh
 *.key
 *.key.pub
 serverless-output.yml
-package-lock.json
+
+# Serverless directories
+.serverless
+config/*
+!config/example.yml

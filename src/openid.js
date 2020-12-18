@@ -56,16 +56,25 @@ const getUserInfo = accessToken =>
 
 const getMembershipConfirmation = (accessToken, org, user) =>
   github()
-    .getMembership(accessToken, org, user)
+    .getOrgMembership(accessToken, org, user)
     .then((response) => {
       if (response.status === 204 || response.status === 200) {
-        logger.info('membership check was successful');
         return true;
       }
-      logger.error('Membership check failed');
       throw new Error(`Could not verify ${user} membership in ${org}`, response);
     })
     .catch(error => console.error('did not work', error.message))
+
+const confirmTeamMembership = (accessToken, org, team, user) =>
+    github()
+      .getTeamMembership(accessToken, org, team, user)
+      .then((response) => {
+        if (response.status === 204 || response.status === 200) {
+          return true;
+        }
+        throw new Error(`Could not verify ${user} membership in team ${team} (${org})`, response);
+      })
+      // .catch(error => console.error('[confirmTeamMembership] - check failed', error));
 
 const getAuthorizeUrl = (client_id, scope, state, response_type) =>
   github().getAuthorizeUrl(client_id, scope, state, response_type);
@@ -159,5 +168,6 @@ module.exports = {
   getJwks,
   getConfigFor,
   getAuthorizeUrl,
-  getMembershipConfirmation
+  getMembershipConfirmation,
+  confirmTeamMembership,
 };

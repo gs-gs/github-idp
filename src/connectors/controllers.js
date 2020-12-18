@@ -1,4 +1,4 @@
-const { GITHUB_ORG } = require('../config');
+const { GITHUB_ORG, GITHUB_TEAMS } = require('../config');
 const logger = require('./logger');
 const openid = require('../openid');
 
@@ -26,9 +26,35 @@ module.exports = respond => ({
         if (GITHUB_ORG) {
           openid
             .getMembershipConfirmation(token, GITHUB_ORG, userInfo.preferred_username)
-            .then(() => {
-              logger.info('Successfully confirmed user membership in organisation');
-              respond.success(userInfo);
+            .then(async () => {
+              logger.info('Success: user is a member of %s', GITHUB_ORG);
+              if (GITHUB_TEAMS) {
+                logger.info('Test: user must have membership in one of %s', GITHUB_TEAMS.split(','));
+                const username = userInfo.preferred_username;
+                const teams = GITHUB_TEAMS.split(',').map((team) => team.trim());
+
+                // We'll use a loop even though eslint suggests not using awaits in loops.
+                // This will limit unnecessary API calls to GitHub and mean we have to worry less
+                // about rate limiting. It also means we can stop after we find the first group
+                // membership.
+                for (let i = 0; i < teams.length; i += 1) {
+                  try {
+                    // eslint-disable-next-line no-await-in-loop
+                    const confirmation = await openid.confirmTeamMembership(token, GITHUB_ORG, teams[i], username);
+                    if (confirmation) {
+                      logger.info('Success: %s has membership in %s (%s)', username, teams[i], GITHUB_ORG);
+                      respond.success(userInfo);
+                      return;
+                    }
+                  } catch (error) {
+                    logger.info('User has no membership in %s', teams[i]);
+                  }
+                }
+                respond.error('User does not have membership in at least one of the required teams.');
+
+              } else {
+                respond.success(userInfo);
+              }
             })
             .catch(error => {
               logger.error('Failed to confirm user membership: %s', error.message || error);

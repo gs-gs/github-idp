@@ -179,7 +179,7 @@ describe('openid domain layer', () => {
             'id_token',
             'token id_token'
           ],
-          scopes_supported: ['openid', 'read:user', 'user:email'],
+          scopes_supported: ['openid', 'read:user', 'user:email', 'read:org'],
           subject_types_supported: ['public'],
           token_endpoint: 'https://not-a-real-host.com/token',
           token_endpoint_auth_methods_supported: [
