@@ -1,0 +1,47 @@
+service: github-cognito-openid-wrapper
+
+custom:
+  stage: ${file(config/${opt:stage, 'dev'}.yml)}
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  environment:
+    GITHUB_ORG: ${self:custom.stage.GITHUB_ORG}
+    GITHUB_CLIENT_ID: ${self:custom.stage.GITHUB_CLIENT_ID}
+    GITHUB_CLIENT_SECRET: ${self:custom.stage.GITHUB_CLIENT_SECRET}
+    COGNITO_REDIRECT_URI: ${self:custom.stage.COGNITO_REDIRECT_URI}
+    GITHUB_API_URL: ${self:custom.stage.GITHUB_API_URL}
+    GITHUB_LOGIN_URL: ${self:custom.stage.GITHUB_LOGIN_URL}
+    GITHUB_TEAMS: ${self:custom.stage.GITHUB_TEAMS}
+
+
+plugins:
+  - serverless-webpack
+
+functions:
+  authorize:
+    handler: src/connectors/lambda/authorize.handler
+    events:
+      - http:
+          path: authorize
+          method: get
+  jwks:
+    handler: src/connectors/lambda/jwks.handler
+    events:
+      - http:
+          path: .well-known/jwks.json
+          method: get
+  token:
+    handler: src/connectors/lambda/token.handler
+    events:
+      - http:
+          path: token
+          method: post
+  userinfo:
+    handler: src/connectors/lambda/userinfo.handler
+    events:
+      - http:
+          path: userinfo
+          method: get

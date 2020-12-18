@@ -1,8 +1,8 @@
-const NodemonPlugin = require('nodemon-webpack-plugin');
-const nodeExternals = require('webpack-node-externals');
+const slsw = require('serverless-webpack');
+// const nodeExternals = require('webpack-node-externals');
 
 const baseConfig = {
-  mode: 'development',
+  mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
   target: 'node',
   devtool: 'source-map',
   module: {
@@ -26,35 +26,15 @@ const baseConfig = {
   }
 };
 
-const config = [
-  {
-    ...baseConfig,
-    output: {
-      libraryTarget: 'commonjs2',
-      path: `${__dirname}/dist-lambda`,
-      filename: '[name].js'
-    },
-    entry: {
-      openIdConfiguration: './src/connectors/lambda/open-id-configuration.js',
-      token: './src/connectors/lambda/token.js',
-      userinfo: './src/connectors/lambda/userinfo.js',
-      jwks: './src/connectors/lambda/jwks.js',
-      authorize: './src/connectors/lambda/authorize.js'
-    }
+const config = {
+  ...baseConfig,
+  output: {
+    libraryTarget: 'commonjs2',
+    path: `${__dirname}/dist-lambda`,
+    filename: '[name].js'
   },
-  {
-    ...baseConfig,
-    output: {
-      libraryTarget: 'commonjs2',
-      path: `${__dirname}/dist-web`,
-      filename: '[name].js'
-    },
-    entry: {
-      server: './src/connectors/web/app.js'
-    },
-    externals: [nodeExternals()],
-    plugins: [new NodemonPlugin()]
-  }
-];
+  entry: slsw.lib.entries,
+};
+
 
 module.exports = config;
