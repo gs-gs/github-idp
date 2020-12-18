@@ -1,3 +1,5 @@
+This repo is a clone (but could be a fork) of https://github.com/TimothyJones/github-cognito-openid-wrapper
+
 # GitHub OpenID Connect Wrapper for Cognito
 
 [![Build Status](https://travis-ci.org/TimothyJones/github-cognito-openid-wrapper.svg?branch=master)](https://travis-ci.org/TimothyJones/github-cognito-openid-wrapper)
