@@ -60,14 +60,19 @@
     "nodemon-webpack-plugin": "^4.0.6",
     "prettier": "^1.14.2",
     "raw-loader": "^0.5.1",
+    "serverless": "^2.19.0",
     "standard-version": "^9.0.0",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.12",
     "webpack-node-externals": "^1.7.2"
   },
   "jest": {
-    "setupFiles": ["./config/setup-pact.js"],
-    "setupFilesAfterEnv": ["./config/setup-test-framework-script.js"],
+    "setupFiles": [
+      "./config/setup-pact.js"
+    ],
+    "setupFilesAfterEnv": [
+      "./config/setup-test-framework-script.js"
+    ],
     "transform": {
       "^.+\\.js$": "babel-jest"
     },
