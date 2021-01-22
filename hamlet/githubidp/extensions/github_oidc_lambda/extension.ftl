@@ -6,7 +6,7 @@
         "_github_oidc_lambda"
     ]
     description=[
-        "Sets auth provider federation settings to align with Github Auth API"
+        "Confgures the API gateway lambda function environment variables"
     ]
     supportedTypes=[
         LAMBDA_FUNCTION_COMPONENT_TYPE,
