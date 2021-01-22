@@ -115,7 +115,7 @@ Next you need to decide if you'd like to deploy with lambda/API Gateway (follow 
 
 - Configure the OIDC integration in AWS console for Cognito (described below, but following [these instructions](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-oidc-idp.html)). The following settings are required:
   - Client ID: The GitHub Client ID above
-  - Authorize scope: `openid read:user user:email`
+  - Authorize scope: `openid read:user user:email read:org`
   - Issuer: `https://<Your API Gateway DNS name>/${Stage_Name}` or `https://<your webserver>/` (for the node server).
   - If you have deployed the web app: Run discovery (big blue button next to Issuer).
   - If you have deployed the lambda/Gateway: For some reason, Cognito is unable to

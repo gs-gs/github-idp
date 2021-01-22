@@ -103,16 +103,16 @@
 
     [#local namespace = formatName(product["Name"], environment["Name"], segment["Name"])]
 
-    [#local apiId = formatId(id, "apigateway") ]
+    [#local apiId = formatName(id, "apigateway") ]
     [#local apiDeploymentUnit = formatName(id, "apigateway") ]
     [#local apiDefinition = formatId(tier,id)]
-    [#local apiSettingsNamespace = formatName(namespace, apiId, instance)]
+    [#local apiSettingsNamespace = formatName(namespace, tier, apiId, instance)]
 
     [#local lambdaId = formatName(id, "lambda") ]
     [#local lambdaDeploymentUnit = formatName(id, "lambda")]
-    [#local lambdaSettingsNamespace = formatName(namespace, lambdaId, instance)]
+    [#local lambdaSettingsNamespace = formatName(namespace, lambdaDeploymentUnit)]
 
-    [#local githubClientSettings = formatName(id, "github", "client" )]
+    [#local githubClientSettings = formatName(id, "githubclient" )]
     [#local githubClientSettingsNamespace = formatName(namespace, githubClientSettings)]
 
     [#-- API Definition for API Gateway --]
@@ -179,14 +179,14 @@
                 "Scope" : "Products",
                 "Namespace" : apiSettingsNamespace,
                 "Settings" : {
-                    "COMMIT" : "_module_",
-                    "FORMATS" : ["openapi"]
+                    "Commit" : "_module_",
+                    "Formats" : ["openapi"]
                 }
             },
             {
                 "Type" : "Settings",
                 "Scope" : "Products",
-                "Namespace" : "apiSettingsNamespace",
+                "Namespace" : apiSettingsNamespace,
                 "Settings" : {
                     "apigw": {
                         "Internal": true,
@@ -213,7 +213,7 @@
                                 },
                                 {
                                     "Path" : "/userinfo",
-                                    "Verb" : "post",
+                                    "Verb" : "get",
                                     "Variable" : "USERINFO_USERINFO_LAMBDA"
                                 }
                             ]
@@ -244,6 +244,8 @@
         ]
     /]
 
+    [#-- Github Client details --]
+    [#-- These are shared between the functions and the Cognito Userpool federation --]
     [@loadModule
         settingSets=[
             {
@@ -267,6 +269,7 @@
                         apiId : {
                             "apigateway" : {
                                 "deployment:Unit" : apiDeploymentUnit,
+                                "IPAddressGroups" : [ "_global" ],
                                 "Instances" : {
                                     instance : {}
                                 },
@@ -313,6 +316,7 @@
                                 "Timeout": 29,
                                 "VPCAccess": false,
                                 "PredefineLogGroup" : true,
+                                "Extensions" : [ "_github_oidc_lambda" ],
                                 "SettingNamespaces" : {
                                     "githubClient" : {
                                         "Name" : githubClientSettings,
@@ -328,6 +332,21 @@
                                         }
                                     }
                                 },
+                                "Links" : {
+                                    "api" : {
+                                        "Tier" : tier,
+                                        "Component" : apiId,
+                                        "Instance" : instance,
+                                        "Version" : "",
+                                        "Direction" : "inbound"
+                                    }
+                                } +
+                                (cognitoLink.Tier!"")?has_content?then(
+                                    {
+                                        "userpool" : cognitoLink
+                                    },
+                                    {}
+                                ),
                                 "Functions" : {
                                     "authorize" : {
                                         "Handler" : "src/connectors/lambda/authorize.handler"
@@ -354,6 +373,7 @@
                             "userpoolauthprovider" : {
                                 "Engine" : "OIDC",
                                 "Extensions" : [ "_github_idp_cognito_provider" ],
+                                "SettingsPrefix" : "GITHUBOIDC",
                                 "AttributeMappings" : {
                                     "website" : {
                                         "UserPoolAttribute" : "website",

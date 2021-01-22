@@ -20,15 +20,15 @@
 
     [@Settings
         {
-            authProviderName + "_OIDC_CLIENT_ID" : _context.Default["GITHUB_CLIENT_ID"],
-            authProviderName + "_OIDC_CLIENT_SECRET" : _context.Default["GITHUB_CLIENT_SECRET"],
-            authProviderName + "_OIDC_SCOPES" : "openid read:user user:email",
-            authProviderName + "_OIDC_ATTRIBUTES_HTTP_METHOD" : "GET",
-            authProviderName + "_OIDC_ISSUER" : apiUrl,
-            authProviderName + "_OIDC_AUTHORIZE_URL" : formatRelativePath(apiUrl, "authorize"),
-            authProviderName + "_OIDC_TOKEN_URL" : formatRelativePath(apiUrl, "token"),
-            authProviderName + "_OIDC_ATTRIBUTES_URL" : formatRelativePath(apiUrl, "userinfo"),
-            authProviderName + "_JWKS_URL" : formatRelativePath(apiUrl, ".well-known/jwks.json" )
+            "GITHUBOIDC_OIDC_CLIENT_ID" : _context.DefaultEnvironment["GITHUB_CLIENT_ID"],
+            "GITHUBOIDC_OIDC_CLIENT_SECRET" : _context.DefaultEnvironment["GITHUB_CLIENT_SECRET"],
+            "GITHUBOIDC_OIDC_SCOPES" : "openid read:user user:email read:org",
+            "GITHUBOIDC_OIDC_ATTRIBUTES_HTTP_METHOD" : "GET",
+            "GITHUBOIDC_OIDC_ISSUER" : apiUrl,
+            "GITHUBOIDC_OIDC_AUTHORIZE_URL" : formatRelativePath(apiUrl, "authorize"),
+            "GITHUBOIDC_OIDC_TOKEN_URL" : formatRelativePath(apiUrl, "token"),
+            "GITHUBOIDC_OIDC_ATTRIBUTES_URL" : formatRelativePath(apiUrl, "userinfo"),
+            "GITHUBOIDC_OIDC_JWKS_URL" : formatRelativePath(apiUrl, ".well-known/jwks.json" )
         }
     /]
 
