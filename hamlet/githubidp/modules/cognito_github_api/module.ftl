@@ -50,7 +50,7 @@
         {
             "Names" : "cognitoLink",
             "Description" : "A link to the congito userpool which will use this API or set congitoRedirectUri",
-            "Children" : linkChildrenConfiguration
+            "AttributeSet" : LINK_ATTRIBUTESET_TYPE
         },
         {
             "Names" : "cognitoRedirectUri",
