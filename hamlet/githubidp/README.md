@@ -30,7 +30,7 @@ The plugin includes the module `cognito_github_api` which creates the following:
                         "Source" : "git",
                         "Source:git" : {
                             "Url" : "https://github.com/gs-gs/github-idp",
-                            "Ref" : "master",
+                            "Ref" : "v0.0.3",
                             "Path" : "hamlet/githubidp"
                         }
                     }
