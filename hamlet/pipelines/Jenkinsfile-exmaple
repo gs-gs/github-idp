@@ -1,0 +1,138 @@
+#!groovy
+
+// Build Pipeline for cognito IDP lambda function
+// The build should be run once per environment to generate new keys on deployment
+
+pipeline {
+
+    agent {
+        label 'hamlet-latest'
+    }
+
+    options {
+        buildDiscarder(
+            logRotator(
+                numToKeepStr: '10'
+            )
+        )
+        skipDefaultCheckout()
+    }
+
+    parameters {
+        booleanParam(
+            name: 'build_github_idp',
+            defaultValue: false,
+            description: 'build github idp lambda'
+        )
+        choice(
+            name: 'environment',
+            choices: [ '<your environments>' ]
+        )
+    }
+
+    environment {
+        product_cmdb = '<product CMDB repo url>'
+        properties_file = '<product pipeline properties file>'
+
+        GITHUB_CREDENTIALS = credentials('github')
+
+        ENVIRONMENT = params['environment']
+        SEGMENT = '<segment>'
+
+    }
+
+    stages {
+
+        stage('build-github-idp') {
+            when {
+                equals expected: true, actual: params.build_github_idp
+            }
+
+            environment {
+                BUILD_PATH = 'github-idp'
+                BUILD_SRC_DIR = ''
+
+                deployment_unit = "github-lambda"
+                image_format = "lambda"
+            }
+
+            steps {
+                dir('github-idp') {
+
+                    script {
+                        github_idp_repo = git credentialsId: 'github', url: 'https://github.com/gs-gs/github-idp', poll: false
+                        env["GITHUB_IDP_GIT_COMMIT"] = github_idp_repo.GIT_COMMIT
+                    }
+
+                    sh '''#!/bin/bash
+                    npm ci
+                    npm run test
+                    npx sls package
+
+                    mkdir src/dist
+                    mv .serverless/github-cognito-openid-wrapper.zip src/dist/lambda.zip
+                    '''
+
+                    archiveArtifacts artifacts: "src/dist/lambda.zip", fingerprint: true
+                    uploadImageToRegistry("${env.properties_file}", "${env.deployment_unit}", "${env.image_format}", "${env.GITHUB_IDP_GIT_COMMIT}")
+                }
+            }
+
+        }
+    }
+}
+
+
+
+void uploadImageToRegistry( properties_file, deployment_unit, image_format, git_commit )   {
+
+    script {
+        env['deployment_unit'] = "${deployment_unit}"
+        env['image_format'] = "${image_format}"
+        env['unit_git_commit'] = "${git_commit}"
+    }
+
+    // Product Setup
+    dir('.hamlet/product') {
+        script {
+            def propertiesContent = readTrusted "${env["properties_file"]}"
+            def productProperties = readProperties interpolate: true, text: "${propertiesContent}";
+            productProperties.each{ k, v -> env["${k}"] ="${v}" }
+        }
+    }
+
+    sh '''#!/bin/bash
+        ${AUTOMATION_BASE_DIR}/setContext.sh
+    '''
+
+    script {
+        def contextProperties = readProperties interpolate: true, file: "${WORKSPACE}/context.properties";
+        contextProperties.each{ k, v -> env["${k}"] ="${v}" }
+    }
+
+    sh '''#!/bin/bash
+        ${AUTOMATION_DIR}/constructTree.sh
+    '''
+
+    script {
+        def contextProperties = readProperties interpolate: true, file: "${WORKSPACE}/context.properties";
+        contextProperties.each{ k, v -> env["${k}"] ="${v}" }
+    }
+
+    sh '''#!/bin/bash
+        ${AUTOMATION_DIR}/manageImages.sh -g "${unit_git_commit}" -u "${deployment_unit}" -f "${image_format}"  || exit $?
+    '''
+
+    script {
+        def contextProperties = readProperties interpolate: true, file: "${WORKSPACE}/context.properties";
+        contextProperties.each{ k, v -> env["${k}"] ="${v}" }
+    }
+
+    sh '''#!/bin/bash
+        . "${AUTOMATION_BASE_DIR}/common.sh"
+        ${AUTOMATION_DIR}/manageBuildReferences.sh -s "${deployment_unit}" -c "${unit_git_commit}" -i "${image_format}" -u
+        DETAIL_MESSAGE="${DETAIL_MESSAGE}, cctype=updref, ccdesc=${AUTOMATION_JOB_IDENTIFIER}"
+        save_product_config "${DETAIL_MESSAGE}" "${PRODUCT_CONFIG_REFERENCE}"
+    '''
+
+}

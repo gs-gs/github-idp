@@ -2,9 +2,9 @@
 
 This plugin for hamlet deploys the API Gateway/Lambda model described in this repositories [README.md](../../README.md)
 
-The plugin included a module which creates the following
+The plugin includes the module `cognito_github_api` which creates the following:
 
-- an API Gateway including an openapi spec with aligns with the services offered
+- an API Gateway including an openapi spec which aligns with the services offered
 - A set of Lambda functions which are invoked by the API Gateway and perform the Github OIDC proxying
 - A Deployment profile which configures a userpool AuthProvider to use the API as its federation source
 
@@ -102,7 +102,7 @@ The plugin included a module which creates the following
                                 }
                             },
                             "Clients" : {
-                                "myAWesomeApp" : {
+                                "myAwesomeApp" : {
                                     "AuthProviders" : [ "github" ]
                                 }
                             }
@@ -114,3 +114,23 @@ The plugin included a module which creates the following
     }
 
     ```
+
+    This creates the github federated provider and enables github auth for applications which use the `myAwesomeApp` userpool client
+
+4. This lambda function is built with a private key which is generated during the build process and is used to sign JWT's.
+    To reduce the risk of keys being used by multiple people we do not provide artefacts for this module and the lambda needs to be built and provided to the hamlet registry.
+
+    A sample [Jenkinsfile](../pipelines/Jenkinsfile-example) has been included which can be copied into your CMDB and added as a pipeline in your jenkins instance
+
+    You will need to add the following properties to your pipelines properties file
+
+    ```
+    APPLICATION_UNITS=<MODULE_ID>-lambda
+
+    # Code Properties
+    <PRODUCT>_<MODULE_ID>_LAMBDA_CODE_REPO=github-idp
+    ```
+
+    Where:
+        - `<MODULE_ID>` is the id parameter value in the module
+        - `<PRODUCT>` is the Id of your product in upper case
