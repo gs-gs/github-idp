@@ -132,5 +132,5 @@ The plugin includes the module `cognito_github_api` which creates the following:
     ```
 
     Where:
-        - `<MODULE_ID>` is the id parameter value in the module
-        - `<PRODUCT>` is the Id of your product in upper case
+      - `<MODULE_ID>` is the id parameter value in the module
+      - `<PRODUCT>` is the Id of your product in upper case
