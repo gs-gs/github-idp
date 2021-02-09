@@ -15,6 +15,19 @@ The plugin includes the module `cognito_github_api` which creates the following:
     Github doesn't provide a phone_number attribute so you can not enforce MFA with phone_number on the pool
     :::
 2. Create a Github OAuth App which will be used by the Lambda function to authenticate with Github
+    1. Set an Application name the relates to your user pool or product
+    2. The home page URL can be anything but usually points to your products public page
+    3. Provide a description about your product
+    4. The Authorization callback Url is based on the the cognito userpool hosted UI. To get the callback Url run the following
+        1. In your cmdb run the following hamlet query
+
+        ```
+        hamlet query describe occurrence --tier-id <your pools tier id> --component-id <your pools component id> attributes
+        ```
+
+        2. The callback Url will be `<UI_BASE_URL>/oauth2/idpresponse` where UI_BASE_URL is listed in the attributes from step one
+    4. Once you have created the pool you will need to generate a client secret which can be done on the details page once the initial app has been setup
+    5. Note down the Client Id and the Generated client secret, you will need these for the module configuration
 3. Add the `cognito_github_api` module from this plugin into your solution and configure the module. The client Id and Secret should be the details created in step 2
     for example in your solution.json add the following
 
@@ -50,11 +63,11 @@ The plugin includes the module `cognito_github_api` which creates the following:
                             },
                             "githubClientId" : {
                                 "Key" : "githubClientId",
-                                "Value" : "abc1234556"
+                                "Value" : "<Github OAuth App Client Id>"
                             },
                             "githubClientSecret" : {
                                 "Key" : "githubClientSecret",
-                                "Value" : "098765432345678987654"
+                                "Value" : "<Github OAuth App Client Secret>"
                             },
                             "githubOrg" : {
                                 "Key" : "githubOrg",
