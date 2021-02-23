@@ -35,7 +35,7 @@
     [#if _context.Links["userpool"]?has_content ]
         [#local cognitoRedirectUri = formatRelativePath(_context.DefaultEnvironment["USERPOOL_UI_BASE_URL"], "oauth2/idpresponse") ]
     [#else]
-        [#local cognitoRedirectUri = _context.DefaultEnvironment["COGNITO_REDIRECT_URI"]]
+        [#local cognitoRedirectUri = (_context.DefaultEnvironment["COGNITO_REDIRECT_URI"])!"" ]
     [/#if]
 
     [@Settings
