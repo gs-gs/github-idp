@@ -116,8 +116,8 @@
     [#local githubClientSettingsNamespace = formatName(namespace, githubClientSettings)]
 
     [#-- API Definition for API Gateway --]
-    [@addDefinition
-        definition={
+    [@loadModule
+        definitions={
             apiDefinition : {
                 "openapi": "3.0.0",
                 "components": {
