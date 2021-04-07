@@ -99,6 +99,7 @@
     [#local environment = getActiveLayer(ENVIRONMENT_LAYER_TYPE)]
     [#local segment = getActiveLayer(SEGMENT_LAYER_TYPE)]
 
+    [#local rawInstance = instance ]
     [#local instance = (instance == "default")?then("", instance)]
 
     [#local namespace = formatName(product["Name"], environment["Name"], segment["Name"])]
@@ -174,15 +175,6 @@
     [#-- API Configuration to map Specification to Lambda Resources --]
     [@loadModule
         settingSets=[
-            {
-                "Type" : "Builds",
-                "Scope" : "Products",
-                "Namespace" : apiSettingsNamespace,
-                "Settings" : {
-                    "Commit" : "_module_",
-                    "Formats" : ["openapi"]
-                }
-            },
             {
                 "Type" : "Settings",
                 "Scope" : "Products",
@@ -271,7 +263,10 @@
                                 "deployment:Unit" : apiDeploymentUnit,
                                 "IPAddressGroups" : [ "_global" ],
                                 "Instances" : {
-                                    instance : {}
+                                    rawInstance : {}
+                                },
+                                "Image" : {
+                                    "Source" : "none"
                                 },
                                 "Links" : {
                                     "authorize" : {
@@ -309,7 +304,7 @@
                             "lambda" : {
                                 "deployment:Unit" : lambdaDeploymentUnit,
                                 "Instances" : {
-                                    instance : {}
+                                    rawInstance : {}
                                 },
                                 "Memory": 256,
                                 "RunTime": "nodejs12.x",

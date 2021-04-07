@@ -37,8 +37,6 @@ pipeline {
         GITHUB_CREDENTIALS = credentials('github')
 
         ENVIRONMENT = params['environment']
-        SEGMENT = '<segment>'
-
     }
 
     stages {
@@ -93,12 +91,10 @@ void uploadImageToRegistry( properties_file, deployment_unit, image_format, git_
     }
 
     // Product Setup
-    dir('.hamlet/product') {
-        script {
-            def propertiesContent = readTrusted "${env["properties_file"]}"
-            def productProperties = readProperties interpolate: true, text: "${propertiesContent}";
-            productProperties.each{ k, v -> env["${k}"] ="${v}" }
-        }
+    script {
+        def propertiesContent = readTrusted "${env["properties_file"]}"
+        def productProperties = readProperties interpolate: true, text: "${propertiesContent}";
+        productProperties.each{ k, v -> env["${k}"] ="${v}" }
     }
 
     sh '''#!/bin/bash
