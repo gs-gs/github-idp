@@ -21,45 +21,67 @@ module.exports = respond => ({
           userInfo: await openid.getUserInfo(token)
         })
       )
-      .then(({userInfo, token}) => {
+      .then(async ({userInfo, token}) => {
         logger.info('Resolved user infos:', userInfo, {});
         if (GITHUB_ORG) {
-          openid
-            .getMembershipConfirmation(token, GITHUB_ORG, userInfo.preferred_username)
-            .then(async () => {
-              logger.info('Success: user is a member of %s', GITHUB_ORG);
-              if (GITHUB_TEAMS) {
-                logger.info('Test: user must have membership in one of %s', GITHUB_TEAMS.split(','));
-                const username = userInfo.preferred_username;
-                const teams = GITHUB_TEAMS.split(',').map((team) => team.trim());
+          // GITHUB_ORG can have multiple orgs, and we want to check access
+          // against each. e.g. org1,org2,org3
+          const orgs = GITHUB_ORG.split(',');
+          const orgMemberships = [];
+          for (let j = 0; j < orgs.length; j +=1) {
+            try {
+              // eslint-disable-next-line no-await-in-loop
+              await openid.getMembershipConfirmation(token, orgs[j], userInfo.preferred_username);
+              orgMemberships.push(orgs[j]);
+            } catch (error) {
+              logger.info('Membership check failed: %s', error.message || error);
+            }
+          }
 
-                // We'll use a loop even though eslint suggests not using awaits in loops.
-                // This will limit unnecessary API calls to GitHub and mean we have to worry less
-                // about rate limiting. It also means we can stop after we find the first group
-                // membership.
-                for (let i = 0; i < teams.length; i += 1) {
-                  try {
-                    // eslint-disable-next-line no-await-in-loop
-                    const confirmation = await openid.confirmTeamMembership(token, GITHUB_ORG, teams[i], username);
-                    if (confirmation) {
-                      logger.info('Success: %s has membership in %s (%s)', username, teams[i], GITHUB_ORG);
-                      respond.success(userInfo);
-                      return;
-                    }
-                  } catch (error) {
-                    logger.info('User has no membership in %s', teams[i]);
+          if (orgMemberships.length === 0) {
+            respond.error('User has no membership in provided organisations');
+          } else {
+            logger.info('Success: user is a member of %s', orgMemberships);
+            if (GITHUB_TEAMS) {
+              logger.info('Test: user must have membership in one of %s', GITHUB_TEAMS.split(','));
+              const username = userInfo.preferred_username;
+
+              // Teams are scoped by their owning organisation
+              // So we expect to find them of the format: `org:team`, or `*:team` for wildcards.
+              // e.g. org1:foo,org2:bar,org2:baz,*:bing
+              // foo and bing map to org 1
+              // bar, baz and bing map to org 2
+              const teams = GITHUB_TEAMS
+                .split(',')
+                .map((team) => team.trim())
+                .filter((team) =>
+                  orgMemberships.includes(team.split(':')[0])
+                  || team.split(':')[0] === '*'
+                ).map((team) => team.split(':')[1])
+
+              // We'll use a loop even though eslint suggests not using awaits in loops.
+              // This will limit unnecessary API calls to GitHub and mean we have to worry less
+              // about rate limiting. It also means we can stop after we find the first group
+              // membership.
+              for (let i = 0; i < teams.length; i += 1) {
+                try {
+                  // eslint-disable-next-line no-await-in-loop
+                  const confirmation = await openid.confirmTeamMembership(token, GITHUB_ORG, teams[i], username);
+                  if (confirmation) {
+                    logger.info('Success: %s has membership in %s (%s)', username, teams[i], GITHUB_ORG);
+                    respond.success(userInfo);
+                    return;
                   }
+                } catch (error) {
+                  logger.info('User has no membership in %s', teams[i]);
                 }
-                respond.error('User does not have membership in at least one of the required teams.');
-
-              } else {
-                respond.success(userInfo);
               }
-            })
-            .catch(error => {
-              logger.error('Failed to confirm user membership: %s', error.message || error);
-              respond.error(error);
-            })
+
+              respond.error('User does not have membership in at least one of the required teams.');
+            } else {
+              respond.success(userInfo);
+            }
+          }
         } else {
           respond.success(userInfo);
         }
