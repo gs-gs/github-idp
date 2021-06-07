@@ -2,6 +2,7 @@ const logger = require('./connectors/logger');
 const { NumericDate } = require('./helpers');
 const crypto = require('./crypto');
 const github = require('./github');
+const { GITHUB_SCOPES } = require('./config');
 
 const getJwks = () => ({ keys: [crypto.getPublicKey()] });
 
@@ -134,7 +135,7 @@ const getConfigFor = host => ({
   // end_session_endpoint: 'https://server.example.com/connect/end_session',
   jwks_uri: `https://${host}/.well-known/jwks.json`,
   // registration_endpoint: 'https://server.example.com/connect/register',
-  scopes_supported: ['openid', 'read:user', 'user:email', 'read:org'],
+  scopes_supported: GITHUB_SCOPES.split(' '), // ['openid', 'read:user', 'user:email', 'read:org'],
   response_types_supported: [
     'code',
     'code id_token',
