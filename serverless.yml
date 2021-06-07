@@ -15,7 +15,7 @@ provider:
     GITHUB_API_URL: ${self:custom.stage.GITHUB_API_URL}
     GITHUB_LOGIN_URL: ${self:custom.stage.GITHUB_LOGIN_URL}
     GITHUB_TEAMS: ${self:custom.stage.GITHUB_TEAMS}
-
+    GITHUB_SCOPES: ${self:custom.stage.GITHUB_SCOPES}
 
 plugins:
   - serverless-webpack
