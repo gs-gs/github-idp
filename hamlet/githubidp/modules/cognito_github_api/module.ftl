@@ -8,44 +8,51 @@
         {
             "Names" : "id",
             "Description" : "A unique id for this instance of the api",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Mandatory" : true
         },
         {
             "Names" : "instance",
             "Description" : "The instance id of the components",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Default" : "default"
         },
         {
             "Names" : "tier",
             "Description" : "The tier the components will belong to",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Mandatory" : true
         },
         {
-            "Names" : "githubOrg",
-            "Description" : "The name of the github org users must be a member of",
-            "Type" : STRING_TYPE,
+            "Names" : "githubOrgs",
+            "Description" : "The name of the github org(s) users must be a member of",
+            "Types" : ARRAY_OF_STRING_TYPE,
             "Mandatory" : true
         },
         {
             "Names" : "githubTeams",
             "Description" : "A list of teams within the githubOrg that the user must be a member of",
-            "Type" : ARRAY_OF_STRING_TYPE,
-            "Mandatory" : true
+            "Types" : ARRAY_OF_STRING_TYPE,
+            "Default" : [],
+            "Mandatory" : false
         },
         {
             "Names" : "githubClientId",
             "Description" : "The Github client Id used by the API",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Mandatory" : true
         },
         {
             "Names" : "githubClientSecret",
             "Description" : "The Github client secret used by the API",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Mandatory" : true
+        },
+        {
+            "Names" : "oauthScopes",
+            "Description" : "The oauth scopes to request from Github - Leave empty for the code function default",
+            "Types" : ARRAY_OF_STRING_TYPE,
+            "Default" : []
         },
         {
             "Names" : "cognitoLink",
@@ -55,25 +62,25 @@
         {
             "Names" : "cognitoRedirectUri",
             "Description" : "The IDP response url for the cognito userpool that will use this API",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Default" : ""
         },
         {
             "Names" : "githubApiUrl",
             "Description" : "The Github API Url",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Default" : "https://api.github.com"
         },
         {
             "Names" : "githubLoginUrl",
             "Description" : "The login url endpoint for Github",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Default" : "https://github.com"
         },
         {
             "Names" : "cogntioDeploymentProfileSuffix",
             "Description" : "The suffix ( added to the id ) for the deployment profile which configures the userpool",
-            "Type" : STRING_TYPE,
+            "Types" : STRING_TYPE,
             "Default" : "_githubprovider"
         }
     ]
@@ -84,10 +91,11 @@
         id
         tier
         instance
-        githubOrg
+        githubOrgs
         githubTeams
         githubClientId
         githubClientSecret
+        oauthScopes
         cognitoLink
         cognitoRedirectUri
         githubApiUrl
@@ -224,14 +232,23 @@
                 "Scope" : "Products",
                 "Namespace" : lambdaSettingsNamespace,
                 "Settings" : {
-                    "GITHUB_ORG" : githubOrg,
+                    "GITHUB_ORG" : githubOrgs?join(","),
                     "GITHUB_CLIENT_ID" : githubClientId,
                     "GITHUB_CLIENT_SECRET" : githubClientSecret,
                     "COGNITO_REDIRECT_URI ": cognitoRedirectUri,
                     "GITHUB_API_URL" : githubApiUrl,
-                    "GITHUB_LOGIN_URL" : githubLoginUrl,
-                    "GITHUB_TEAMS" : githubTeams?join(",")
-                }
+                    "GITHUB_LOGIN_URL" : githubLoginUrl
+                } +
+                attributeIfContent(
+                    "GITHUB_TEAMS",
+                    githubTeams,
+                    githubTeams?join(",")
+                ) +
+                attributeIfContent(
+                    "GITHUB_SCOPES",
+                    oauthScopes,
+                    oauthScopes?join(" ")
+                )
             }
         ]
     /]
