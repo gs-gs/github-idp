@@ -54,7 +54,6 @@ pipeline {
 
                     sh '''#!/bin/bash
                     npm ci
-                    npm run test
                     npx sls package
 
                     mkdir src/dist
