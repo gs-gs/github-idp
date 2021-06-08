@@ -10,23 +10,13 @@ pipeline {
     }
 
     options {
-        buildDiscarder(
-            logRotator(
-                numToKeepStr: '10'
-            )
-        )
         skipDefaultCheckout()
     }
 
     parameters {
-        booleanParam(
-            name: 'build_github_idp',
-            defaultValue: false,
-            description: 'build github idp lambda'
-        )
         choice(
             name: 'environment',
-            choices: [ '<your environments>' ]
+            choices: [ '<your environment names from your cmdb>' ]
         )
     }
 
@@ -34,18 +24,18 @@ pipeline {
         product_cmdb = '<product CMDB repo url>'
         properties_file = '<product pipeline properties file>'
 
+        // Update to align with the credentials for your CMDB
         GITHUB_CREDENTIALS = credentials('github')
 
-        ENVIRONMENT = params['environment']
+        ENVIRONMENT = "${params['environment']}"
+
+        // The git ref for the github-idp code
+        githubidp_ref = 'v1.0.0'
     }
 
     stages {
 
         stage('build-github-idp') {
-            when {
-                equals expected: true, actual: params.build_github_idp
-            }
-
             environment {
                 BUILD_PATH = 'github-idp'
                 BUILD_SRC_DIR = ''
@@ -58,7 +48,7 @@ pipeline {
                 dir('github-idp') {
 
                     script {
-                        github_idp_repo = git credentialsId: 'github', url: 'https://github.com/gs-gs/github-idp', poll: false
+                        github_idp_repo = git credentialsId: 'github', url: 'https://github.com/gs-gs/github-idp', poll: false, ref: 'githubidp_ref'
                         env["GITHUB_IDP_GIT_COMMIT"] = github_idp_repo.GIT_COMMIT
                     }
 
@@ -85,9 +75,9 @@ pipeline {
 void uploadImageToRegistry( properties_file, deployment_unit, image_format, git_commit )   {
 
     script {
-        env['deployment_unit'] = "${deployment_unit}"
-        env['image_format'] = "${image_format}"
-        env['unit_git_commit'] = "${git_commit}"
+        env['DEPLOYMENT_UNITS'] = "${deployment_unit}"
+        env['IMAGE_FORMATS'] = "${image_format}"
+        env['GIT_COMMIT'] = "${git_commit}"
     }
 
     // Product Setup
@@ -116,7 +106,7 @@ void uploadImageToRegistry( properties_file, deployment_unit, image_format, git_
     }
 
     sh '''#!/bin/bash
-        ${AUTOMATION_DIR}/manageImages.sh -g "${unit_git_commit}" -u "${deployment_unit}" -f "${image_format}"  || exit $?
+        ${AUTOMATION_DIR}/manageImages.sh -g "${GIT_COMMIT}" -u "${DEPLOYMENT_UNITS}" -f "${IMAGE_FORMATS}"  || exit $?
     '''
 
     script {
@@ -125,10 +115,24 @@ void uploadImageToRegistry( properties_file, deployment_unit, image_format, git_
     }
 
     sh '''#!/bin/bash
-        . "${AUTOMATION_BASE_DIR}/common.sh"
-        ${AUTOMATION_DIR}/manageBuildReferences.sh -s "${deployment_unit}" -c "${unit_git_commit}" -i "${image_format}" -u
-        DETAIL_MESSAGE="${DETAIL_MESSAGE}, cctype=updref, ccdesc=${AUTOMATION_JOB_IDENTIFIER}"
-        save_product_config "${DETAIL_MESSAGE}" "${PRODUCT_CONFIG_REFERENCE}"
+        ${AUTOMATION_DIR}/validateUpdateBuildReferencesParameters.sh
     '''
 
+    script {
+        def contextProperties = readProperties interpolate: true, file: "${WORKSPACE}/context.properties";
+        contextProperties.each{ k, v -> env["${k}"] ="${v}" }
+    }
+
+    sh '''#!/bin/bash
+        ${AUTOMATION_DIR}/confirmBuilds.sh
+    '''
+
+    script {
+        def contextProperties = readProperties interpolate: true, file: "${WORKSPACE}/context.properties";
+        contextProperties.each{ k, v -> env["${k}"] ="${v}" }
+    }
+
+    sh '''#!/bin/bash
+        ${AUTOMATION_DIR}/updateBuildReferences.sh
+    '''
 }

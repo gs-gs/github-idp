@@ -27,10 +27,25 @@
             "GITHUB_CLIENT_ID",
             "GITHUB_CLIENT_SECRET",
             "GITHUB_API_URL",
-            "GITHUB_LOGIN_URL",
-            "GITHUB_TEAMS"
+            "GITHUB_LOGIN_URL"
         ]
     /]
+
+    [#if ((_context.DefaultEnvironment["GITHUB_TEAMS"])!"")?has_content ]
+        [@Settings
+            {
+                "GITHUB_TEAMS" : _context.DefaultEnvironment["GITHUB_TEAMS"]
+            }
+        /]
+    [/#if]
+
+    [#if ((_context.DefaultEnvironment["GITHUB_SCOPES"])!"")?has_content ]
+        [@Settings
+            {
+                "GITHUB_SCOPES" : _context.DefaultEnvironment["GITHUB_SCOPES"]
+            }
+        /]
+    [/#if]
 
     [#if _context.Links["userpool"]?has_content ]
         [#local cognitoRedirectUri = formatRelativePath(_context.DefaultEnvironment["USERPOOL_UI_BASE_URL"], "oauth2/idpresponse") ]

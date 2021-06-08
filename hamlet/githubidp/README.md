@@ -21,9 +21,17 @@ The plugin includes the module `cognito_github_api` which creates the following:
     4. The Authorization callback Url is based on the the cognito userpool hosted UI. To get the callback Url run the following
         1. In your cmdb run the following hamlet query
 
-        ```
-        hamlet query describe occurrence --tier-id <your pools tier id> --component-id <your pools component id> attributes
-        ```
+            ```bash
+            hamlet component describe-occurrence -n <userpool tier name>-<userpool tier component name> attributes
+            ```
+
+            if you don't have the name of the occurrence run
+
+            ```bash
+            hamlet component list-occurrences
+            ```
+
+            and find your userpool in the list
 
         2. The callback Url will be `<UI_BASE_URL>/oauth2/idpresponse` where UI_BASE_URL is listed in the attributes from step one
     4. Once you have created the pool you will need to generate a client secret which can be done on the details page once the initial app has been setup
@@ -43,7 +51,7 @@ The plugin includes the module `cognito_github_api` which creates the following:
                         "Source" : "git",
                         "Source:git" : {
                             "Url" : "https://github.com/gs-gs/github-idp",
-                            "Ref" : "v0.0.3",
+                            "Ref" : "v1.0.0",
                             "Path" : "hamlet/githubidp"
                         }
                     }
@@ -55,7 +63,7 @@ The plugin includes the module `cognito_github_api` which creates the following:
                         "Parameters" : {
                             "id" : {
                                 "Key" : "id",
-                                "Value" : "github"
+                                "Value" : "githubauth"
                             },
                             "tier" : {
                                 "Key" : "tier",
@@ -63,19 +71,19 @@ The plugin includes the module `cognito_github_api` which creates the following:
                             },
                             "githubClientId" : {
                                 "Key" : "githubClientId",
-                                "Value" : "<Github OAuth App Client Id>"
+                                "Value" : '<Github OAuth App Client Id>'
                             },
                             "githubClientSecret" : {
                                 "Key" : "githubClientSecret",
-                                "Value" : "<Github OAuth App Client Secret>"
+                                "Value" : '<Github OAuth App Client Secret>'
                             },
-                            "githubOrg" : {
-                                "Key" : "githubOrg",
-                                "Value" : "hamlet-io"
+                            "githubOrgs" : {
+                                "Key" : "githubOrgs",
+                                "Value" : [ '<a list of the github orgs the user can belong to>' ]
                             },
                             "githubTeams" : {
                                 "Key" : "githubTeams",
-                                "Value" : [ "engine-maintainers" ]
+                                "Value" : [ '< a list of teams that the user can belong to in the org format <org>:<team> ]
                             },
                             "cognitoLink" : {
                                 "Key" : "cognitoLink",
@@ -91,10 +99,12 @@ The plugin includes the module `cognito_github_api` which creates the following:
                 }
             }
     ```
+
     The `cognitoLink` is a link to an existing user pool which will you will need in your solution
     The module also creates a DeploymentProfile which needs to be applied to a new AuthProvider on the Cognito user pool
 
     solution.json
+
     ```json
     {
         "Tiers" : {
@@ -110,7 +120,7 @@ The plugin includes the module `cognito_github_api` which creates the following:
                             "AuthProviders" : {
                                 "github" : {
                                     "Profiles" : {
-                                        "Deployment" : [ "githubidp_githubprovider"]
+                                        "Deployment" : [ "githubauth_githubprovider"]
                                     }
                                 }
                             },
@@ -137,7 +147,7 @@ The plugin includes the module `cognito_github_api` which creates the following:
 
     You will need to add the following properties to your pipelines properties file
 
-    ```
+    ```properties
     APPLICATION_UNITS=<MODULE_ID>-lambda
 
     # Code Properties
