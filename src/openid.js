@@ -64,7 +64,7 @@ const getMembershipConfirmation = (accessToken, org, user) =>
       }
       throw new Error(`Could not verify ${user} membership in ${org}`, response);
     })
-    .catch(error => console.error('did not work', error.message))
+    // .catch(error => console.error('did not work', error.message))
 
 const confirmTeamMembership = (accessToken, org, team, user) =>
     github()
