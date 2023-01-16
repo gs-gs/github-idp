@@ -121,6 +121,9 @@
     [#local lambdaDeploymentUnit = formatName(id, "lambda")]
     [#local lambdaSettingsNamespace = formatName(namespace, lambdaDeploymentUnit)]
 
+    [#local imageId = formatName(id, "image")]
+    [#local imageDeploymentUnit = formatName(id, "image")]
+
     [#local githubClientSettings = formatName(id, "githubclient" )]
     [#local githubClientSettingsNamespace = formatName(namespace, githubClientSettings)]
 
@@ -224,51 +227,6 @@
         ]
     /]
 
-    [#-- Lambda Configuration --]
-    [@loadModule
-        settingSets=[
-            {
-                "Type" : "Settings",
-                "Scope" : "Products",
-                "Namespace" : lambdaSettingsNamespace,
-                "Settings" : {
-                    "GITHUB_ORG" : githubOrgs?join(","),
-                    "GITHUB_CLIENT_ID" : githubClientId,
-                    "GITHUB_CLIENT_SECRET" : githubClientSecret,
-                    "COGNITO_REDIRECT_URI ": cognitoRedirectUri,
-                    "GITHUB_API_URL" : githubApiUrl,
-                    "GITHUB_LOGIN_URL" : githubLoginUrl
-                } +
-                attributeIfContent(
-                    "GITHUB_TEAMS",
-                    githubTeams,
-                    githubTeams?join(",")
-                ) +
-                attributeIfContent(
-                    "GITHUB_SCOPES",
-                    oauthScopes,
-                    oauthScopes?join(" ")
-                )
-            }
-        ]
-    /]
-
-    [#-- Github Client details --]
-    [#-- These are shared between the functions and the Cognito Userpool federation --]
-    [@loadModule
-        settingSets=[
-            {
-                "Type" : "Settings",
-                "Scope" : "Products",
-                "Namespace" : githubClientSettingsNamespace,
-                "Settings" : {
-                    "GITHUB_CLIENT_ID" : githubClientId,
-                    "GITHUB_CLIENT_SECRET" : githubClientSecret
-                }
-            }
-        ]
-    /]
-
     [#-- Solution Configuration --]
     [@loadModule
         blueprint={
@@ -317,61 +275,102 @@
                                 }
                             }
                         },
+                        imageId : {
+                            "Type": "image",
+                            "deployment:Unit": imageDeploymentUnit,
+                            "Instances" : {
+                                rawInstance : {}
+                            },
+                            "Format": "lambda"
+                        },
                         lambdaId : {
-                            "lambda" : {
-                                "deployment:Unit" : lambdaDeploymentUnit,
-                                "Instances" : {
-                                    rawInstance : {}
+                            "Type": "lambda",
+                            "deployment:Unit" : lambdaDeploymentUnit,
+                            "Instances" : {
+                                rawInstance : {}
+                            },
+                            "Memory": 256,
+                            "RunTime": "nodejs16.x",
+                            "Timeout": 29,
+                            "VPCAccess": false,
+                            "PredefineLogGroup" : true,
+                            "Extensions" : [ "_github_oidc_lambda" ],
+                            "Image" : {
+                                "Source" : "link",
+                                "Link" : {
+                                    "Tier" : tier,
+                                    "Component" : imageId,
+                                    "Instance": rawInstance,
+                                    "Version" : ""
+                                }
+                            },
+                            "Settings": {
+                                "GITHUB_ORG" : {
+                                    "Value": githubOrgs?join(",")
                                 },
-                                "Memory": 256,
-                                "RunTime": "nodejs12.x",
-                                "Timeout": 29,
-                                "VPCAccess": false,
-                                "PredefineLogGroup" : true,
-                                "Extensions" : [ "_github_oidc_lambda" ],
-                                "SettingNamespaces" : {
-                                    "githubClient" : {
-                                        "Name" : githubClientSettings,
-                                        "Match" : "partial",
-                                        "IncludeInNamespace" : {
-                                            "Tier" : false,
-                                            "Component" : false,
-                                            "Type" : false,
-                                            "SubComponent" : false,
-                                            "Instance" : true,
-                                            "Version" : false,
-                                            "Name" : true
-                                        }
-                                    }
+                                "GITHUB_CLIENT_ID" : {
+                                    "Value": githubClientId
                                 },
-                                "Links" : {
-                                    "api" : {
-                                        "Tier" : tier,
-                                        "Component" : apiId,
-                                        "Instance" : instance,
-                                        "Version" : "",
-                                        "Direction" : "inbound"
-                                    }
-                                } +
-                                (cognitoLink.Tier!"")?has_content?then(
-                                    {
-                                        "userpool" : cognitoLink
-                                    },
-                                    {}
-                                ),
-                                "Functions" : {
-                                    "authorize" : {
-                                        "Handler" : "src/connectors/lambda/authorize.handler"
-                                    },
-                                    "jwks" : {
-                                        "Handler" : "src/connectors/lambda/jwks.handler"
-                                    },
-                                    "token" : {
-                                        "Handler" : "src/connectors/lambda/token.handler"
-                                    },
-                                    "userinfo" : {
-                                        "Handler" : "src/connectors/lambda/userinfo.handler"
-                                    }
+                                "GITHUB_CLIENT_SECRET" : {
+                                    "Value": githubClientSecret
+                                },
+                                "COGNITO_REDIRECT_URI": {
+                                    "Value": cognitoRedirectUri
+                                },
+                                "GITHUB_API_URL" : {
+                                    "Value": githubApiUrl
+                                },
+                                "GITHUB_LOGIN_URL" : {
+                                    "Value": githubLoginUrl
+                                },
+                                "GITHUB_CLIENT_ID" : {
+                                    "Value": githubClientId
+                                },
+                                "GITHUB_CLIENT_SECRET" : {
+                                    "Value": githubClientSecret
+                                }
+                            } +
+                            attributeIfContent(
+                                "GITHUB_TEAMS",
+                                githubTeams,
+                                {
+                                    "Value": githubTeams?join(",")
+                                }
+                            ) +
+                            attributeIfContent(
+                                "GITHUB_SCOPES",
+                                oauthScopes,
+                                {
+                                    "Value": oauthScopes?join(" ")
+                                }
+                            ),
+                            "Links" : {
+                                "api" : {
+                                    "Tier" : tier,
+                                    "Component" : apiId,
+                                    "Instance" : instance,
+                                    "Version" : "",
+                                    "Direction" : "inbound"
+                                }
+                            } +
+                            (cognitoLink.Tier!"")?has_content?then(
+                                {
+                                    "userpool" : cognitoLink
+                                },
+                                {}
+                            ),
+                            "Functions" : {
+                                "authorize" : {
+                                    "Handler" : "src/connectors/lambda/authorize.handler"
+                                },
+                                "jwks" : {
+                                    "Handler" : "src/connectors/lambda/jwks.handler"
+                                },
+                                "token" : {
+                                    "Handler" : "src/connectors/lambda/token.handler"
+                                },
+                                "userinfo" : {
+                                    "Handler" : "src/connectors/lambda/userinfo.handler"
                                 }
                             }
                         }
@@ -428,19 +427,12 @@
                                         "Version" : ""
                                     }
                                 },
-                                "SettingNamespaces" : {
-                                    "githubClient" : {
-                                        "Name" : githubClientSettings,
-                                        "Match" : "partial",
-                                        "IncludeInNamespace" : {
-                                            "Tier" : false,
-                                            "Component" : false,
-                                            "Type" : false,
-                                            "SubComponent" : false,
-                                            "Instance" : true,
-                                            "Version" : false,
-                                            "Name" : true
-                                        }
+                                "Settings" : {
+                                    "GITHUB_CLIENT_ID" : {
+                                        "Value": githubClientId
+                                    },
+                                    "GITHUB_CLIENT_SECRET" : {
+                                        "Value": githubClientSecret
                                     }
                                 }
                             }
