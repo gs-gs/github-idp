@@ -227,41 +227,6 @@
         ]
     /]
 
-    [#-- Lambda Configuration --]
-    [@loadModule
-        settingSets=[
-            {
-                "Type" : "Settings",
-                "Scope" : "Products",
-                "Namespace" : lambdaSettingsNamespace,
-                "Settings" : {
-                    "GITHUB_ORG" : githubOrgs?join(","),
-                    "GITHUB_CLIENT_ID" : githubClientId,
-                    "GITHUB_CLIENT_SECRET" : githubClientSecret,
-                    "COGNITO_REDIRECT_URI ": cognitoRedirectUri,
-                    "GITHUB_API_URL" : githubApiUrl,
-                    "GITHUB_LOGIN_URL" : githubLoginUrl
-                }
-            }
-        ]
-    /]
-
-    [#-- Github Client details --]
-    [#-- These are shared between the functions and the Cognito Userpool federation --]
-    [@loadModule
-        settingSets=[
-            {
-                "Type" : "Settings",
-                "Scope" : "Products",
-                "Namespace" : githubClientSettingsNamespace,
-                "Settings" : {
-                    "GITHUB_CLIENT_ID" : githubClientId,
-                    "GITHUB_CLIENT_SECRET" : githubClientSecret
-                }
-            }
-        ]
-    /]
-
     [#-- Solution Configuration --]
     [@loadModule
         blueprint={
@@ -349,7 +314,7 @@
                                 "GITHUB_CLIENT_SECRET" : {
                                     "Value": githubClientSecret
                                 },
-                                "COGNITO_REDIRECT_URI ": {
+                                "COGNITO_REDIRECT_URI": {
                                     "Value": cognitoRedirectUri
                                 },
                                 "GITHUB_API_URL" : {
