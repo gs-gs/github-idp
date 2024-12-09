@@ -17,12 +17,10 @@ describe('With an increased jasmine timeout', () => {
     // We have to increase the jasmine timeout in order to run pact
     // on some machines / configurations, since the server sometimes
     // takes a little longer to start
-    originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+
   });
 
   afterAll(() => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
   });
 
   describe('GitHub Client Pact', () => {
