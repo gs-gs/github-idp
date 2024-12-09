@@ -290,7 +290,7 @@
                                 rawInstance : {}
                             },
                             "Memory": 256,
-                            "RunTime": "nodejs16.x",
+                            "RunTime": "nodejs20.x",
                             "Timeout": 29,
                             "VPCAccess": false,
                             "PredefineLogGroup" : true,
