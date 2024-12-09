@@ -58,7 +58,7 @@ describe('With an increased jasmine timeout', () => {
         });
 
         // add expectations
-        it('returns a sucessful body', done =>
+        it('returns a sucessful body', (done) =>
           github(PACT_BASE_URL)
             .getUserDetails('THIS_IS_MY_TOKEN')
             .then(response => {
@@ -156,7 +156,7 @@ describe('With an increased jasmine timeout', () => {
         });
 
         // add expectations
-        it('returns a sucessful body', done =>
+        it('returns a sucessful body', (done) =>
           github(PACT_BASE_URL)
             .getUserEmails('THIS_IS_MY_TOKEN')
             .then(response => {
@@ -286,7 +286,7 @@ describe('With an increased jasmine timeout', () => {
         });
 
         // add expectations
-        it('returns a sucessful body', done =>
+        it('returns a sucessful body', (done) =>
           github(PACT_BASE_URL)
             .getToken('SOME_CODE')
             .then(response => {
