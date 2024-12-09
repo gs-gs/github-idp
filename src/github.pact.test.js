@@ -58,12 +58,11 @@ describe('With an increased jasmine timeout', () => {
         });
 
         // add expectations
-        it('returns a sucessful body', (done) =>
+        it('returns a sucessful body', () =>
           github(PACT_BASE_URL)
             .getUserDetails('THIS_IS_MY_TOKEN')
             .then(response => {
               expect(response).toEqual(EXPECTED_BODY);
-              done();
             }));
       });
       describe('When the access token is bad', () => {
@@ -156,12 +155,11 @@ describe('With an increased jasmine timeout', () => {
         });
 
         // add expectations
-        it('returns a sucessful body', (done) =>
+        it('returns a sucessful body', () =>
           github(PACT_BASE_URL)
             .getUserEmails('THIS_IS_MY_TOKEN')
             .then(response => {
               expect(response).toEqual(EXPECTED_BODY);
-              done();
             }));
       });
       describe('When the access token is bad', () => {
@@ -286,12 +284,11 @@ describe('With an increased jasmine timeout', () => {
         });
 
         // add expectations
-        it('returns a sucessful body', (done) =>
+        it('returns a sucessful body', () =>
           github(PACT_BASE_URL)
             .getToken('SOME_CODE')
             .then(response => {
               expect(response).toEqual(EXPECTED_BODY);
-              done();
             }));
       });
       describe('When the code is bad', () => {
